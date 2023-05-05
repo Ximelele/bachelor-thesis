@@ -1,6 +1,6 @@
 import time
 import pandas as pd
-
+import pyclone2revolver as p2r
 
 def AssignCopyNumber(battenberg_ouput, patient_data):
 
@@ -102,5 +102,6 @@ def EraseVCFHeader(vcf_file):
 
 if __name__ == '__main__':
     # EraseVCFHeader("P1.f82d2154-d0d9.WGS_entirely.raw.vcf")
-    AssignCopyNumber("f82d2154-d0dc-2b27-e040-11ac0c48688a_subclones.txt", "P1.f82d2154-d0d9.WGS_entirely.raw1.vcf")
+    # AssignCopyNumber("f82d2154-d0dc-2b27-e040-11ac0c48688a_subclones.txt", "P1.f82d2154-d0d9.WGS_entirely.raw1.vcf")
     # AssignCopyNumber("f82d2154-d0dc-2b27-e040-11ac0c48688a_subclones.txt", "shorter_output.csv")
+    p2r.SortOutputPyClone("PyCloneP1.f82d2154-d0d9.WGS_entirely.raw1.tsv")
