@@ -1,11 +1,15 @@
 import time
 import pandas as pd
 import pyclone2revolver as p2r
+from pathlib import Path
+
 
 def AssignCopyNumber(battenberg_ouput, patient_data):
-
     # Patient number
-    mutation_id_begin = patient_data.split('.')[0] + ":"
+    mutation_id_begin = patient_data.split('.')[0].split('/')[1] + ":"
+    # print(mutation_id_begin)
+    # print(patient_data)
+    # print(battenberg_ouput)
 
     copy_number_info = pd.read_csv(battenberg_ouput, sep="\t")
     copy_number_info.drop(copy_number_info.columns[[3, 4, 5, 9, 10, 11, 12, 13, 14, 15, 16]], axis=1, inplace=True)
@@ -25,7 +29,7 @@ def AssignCopyNumber(battenberg_ouput, patient_data):
     alt_counts = []
     ref_counts = []
 
-    print("lets get this bread")
+    print("Data mapping")
     start_time = time.time()
     for i in range(len(patient_df)):
 
@@ -86,7 +90,7 @@ def AssignCopyNumber(battenberg_ouput, patient_data):
               }
     PyClone_input = pd.DataFrame(output)
 
-    PyClone_input.to_csv("PyClone" + patient_data, sep='\t')
+    PyClone_input.to_csv("PyClone" + patient_data.split('.')[0].split('/')[1], sep='\t')
     print("--- %s seconds ---" % (time.time() - start_time))
 
 
@@ -101,7 +105,67 @@ def EraseVCFHeader(vcf_file):
 
 
 if __name__ == '__main__':
-    # EraseVCFHeader("P1.f82d2154-d0d9.WGS_entirely.raw.vcf")
-    # AssignCopyNumber("f82d2154-d0dc-2b27-e040-11ac0c48688a_subclones.txt", "P1.f82d2154-d0d9.WGS_entirely.raw1.vcf")
-    # AssignCopyNumber("f82d2154-d0dc-2b27-e040-11ac0c48688a_subclones.txt", "shorter_output.csv")
-    p2r.SortOutputPyClone("PyCloneP1.f82d2154-d0d9.WGS_entirely.raw1.tsv")
+    # list_of_files = []
+    #
+    # list_of_cn = []
+    # for path in Path('drive-download-20230509T123841Z-002').rglob('*'):
+    #     list_of_files.append(path.name)
+    #
+    # for path in Path('CN_files').rglob('*'):
+    #     list_of_cn.append(path.name)
+    #
+    #
+    # # remove header
+    # for file_name in list_of_files:
+    #     print("Running header removal")
+    #     EraseVCFHeader("drive-download-20230509T123841Z-002/"+file_name)
+    #     print("Header removed")
+    #     get_subclone_file_name = file_name.split('.')[1].split('-')[0]
+    #     subclone : str
+    #     for subclone_name in list_of_cn:
+    #         get_sublone_name_1 = subclone_name.split('-')[0]
+    #         subclone = get_sublone_name_1
+    #
+    #         if subclone == get_subclone_file_name:
+    #             print(f'subclone {subclone_name} VCF {file_name}')
+    #
+    #             AssignCopyNumber("CN_files/"+subclone_name, "drive-download-20230509T123841Z-002/"+file_name)
+    #             list_of_cn.remove(subclone_name)
+    #             break
+    #
+    #     # print(get_subclone_file_name)
+
+    #
+    pyclone_files = []
+    annovar_files = []
+    for path in Path('pyclone-vi').rglob('PyClone.*.tsv'):
+        pyclone_files.append(path.name)
+    print(len(pyclone_files))
+
+    for path in Path('annovar').rglob('*.cut.txt'):
+        annovar_files.append(path.name)
+    print(annovar_files)
+
+
+    for file_name in pyclone_files:
+        print("Running Revolver input creator")
+        patient=file_name.split('.')[1]
+        for anno_file_name in annovar_files:
+            anno_patient = anno_file_name.split('.')[0]
+            if patient == anno_patient:
+                try:
+                    p2r.SortOutputPyClone("/media/kovac/Resources1/MartinD/pyclone-vi/"+file_name)
+                except:
+                    print("Already done")
+                p2r.MergeSortedWithAnnovar("/media/kovac/Resources1/MartinD/pyclone-vi/"+file_name,
+                                           "/media/kovac/Resources1/MartinD/annovar/"+anno_file_name)
+                annovar_files.remove(anno_file_name)
+    # p2r.SortOutputPyClone("/media/kovac/Resources1/MartinD/pyclone-vi/PyClone.P2.tsv.h5.tsv")
+
+    files_for_revolver = []
+    for path in Path('/media/kovac/Resources1/MartinD/').glob('*.tsv'):
+        print(path.name)
+        files_for_revolver.append(path.name)
+    p2r.CreateRevolverInput(files_for_revolver)
+
+    p2r.DetermineDriver("revolver_input.tsv","IntOGen-DriverGenes.txt")
