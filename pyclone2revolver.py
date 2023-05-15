@@ -86,16 +86,8 @@ def DetermineDriver(revolver_input,driver_sheet):
 
 
     for counter,data in enumerate(revolver_inputDF['variantID']):
-        gene_name = data.split(';')
-        if len(gene_name) > 1:
-            for i in gene_name:
-                if i in drive_inputDF['Symbol'].values:
-                    revolver_inputDF['is.driver'][counter] = True
-                    break
-
-        else:
-            if data in drive_inputDF['Symbol'].values:
-                revolver_inputDF['is.driver'][counter] = True
+        if data in drive_inputDF['Symbol'].values:
+            revolver_inputDF['is.driver'][counter] = True
 
     revolver_inputDF.to_csv(revolver_input, sep='\t', index=False)
 
@@ -105,3 +97,27 @@ def DetermineClonal(pycloneDf,output):
             pycloneDf['is.clonal'][counter] = True
 
     return pycloneDf
+
+def RemoveDuplicates(revolver_input):
+    SplitVariantID(revolver_input)
+    revolver_inputDF = pd.read_csv(revolver_input, sep="\t")
+    revolver_inputDF = revolver_inputDF.drop_duplicates(subset=['variantID'], keep='first')
+    revolver_inputDF.to_csv(revolver_input, sep='\t', index=False)
+
+
+def SplitVariantID(revolver_input):
+    revolver_inputDF = pd.read_csv(revolver_input, sep="\t")
+    for counter, data in enumerate(revolver_inputDF['variantID']):
+        single_gene = data.split(';')
+
+        if len(single_gene) >1:
+            for i in single_gene:
+                if i == "NONE":
+                    continue
+                else:
+                    revolver_inputDF['variantID'][counter] = i
+                    break
+
+    revolver_inputDF.to_csv(revolver_input, sep='\t', index=False)
+
+

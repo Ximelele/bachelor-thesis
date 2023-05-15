@@ -105,37 +105,37 @@ def EraseVCFHeader(vcf_file):
 
 
 if __name__ == '__main__':
-    # list_of_files = []
-    #
-    # list_of_cn = []
-    # for path in Path('drive-download-20230509T123841Z-002').rglob('*'):
-    #     list_of_files.append(path.name)
-    #
-    # for path in Path('CN_files').rglob('*'):
-    #     list_of_cn.append(path.name)
-    #
-    #
-    # # remove header
-    # for file_name in list_of_files:
-    #     print("Running header removal")
-    #     EraseVCFHeader("drive-download-20230509T123841Z-002/"+file_name)
-    #     print("Header removed")
-    #     get_subclone_file_name = file_name.split('.')[1].split('-')[0]
-    #     subclone : str
-    #     for subclone_name in list_of_cn:
-    #         get_sublone_name_1 = subclone_name.split('-')[0]
-    #         subclone = get_sublone_name_1
-    #
-    #         if subclone == get_subclone_file_name:
-    #             print(f'subclone {subclone_name} VCF {file_name}')
-    #
-    #             AssignCopyNumber("CN_files/"+subclone_name, "drive-download-20230509T123841Z-002/"+file_name)
-    #             list_of_cn.remove(subclone_name)
-    #             break
-    #
-    #     # print(get_subclone_file_name)
+    list_of_files = []
 
-    #
+    list_of_cn = []
+    for path in Path('drive-download-20230509T123841Z-002').rglob('*'):
+        list_of_files.append(path.name)
+
+    for path in Path('CN_files').rglob('*'):
+        list_of_cn.append(path.name)
+
+
+    # remove header
+    for file_name in list_of_files:
+        print("Running header removal")
+        EraseVCFHeader("drive-download-20230509T123841Z-002/"+file_name)
+        print("Header removed")
+        get_subclone_file_name = file_name.split('.')[1].split('-')[0]
+        subclone : str
+        for subclone_name in list_of_cn:
+            get_sublone_name_1 = subclone_name.split('-')[0]
+            subclone = get_sublone_name_1
+
+            if subclone == get_subclone_file_name:
+                print(f'subclone {subclone_name} VCF {file_name}')
+
+                AssignCopyNumber("CN_files/"+subclone_name, "drive-download-20230509T123841Z-002/"+file_name)
+                list_of_cn.remove(subclone_name)
+                break
+
+        # print(get_subclone_file_name)
+
+
     pyclone_files = []
     annovar_files = []
     for path in Path('pyclone-vi').rglob('PyClone.*.tsv'):
@@ -165,7 +165,21 @@ if __name__ == '__main__':
     files_for_revolver = []
     for path in Path('/media/kovac/Resources1/MartinD/').glob('*.tsv'):
         print(path.name)
+        p2r.RemoveDuplicates(path.name)
         files_for_revolver.append(path.name)
     p2r.CreateRevolverInput(files_for_revolver)
 
     p2r.DetermineDriver("revolver_input.tsv","IntOGen-DriverGenes.txt")
+
+    revolver_inputDF = pd.read_csv("data.tsv", sep="\t")
+    revolver_inputDF2 = pd.read_csv("revolver_input.tsv", sep="\t")
+    print(len(revolver_inputDF2))
+    df_subset = revolver_inputDF[revolver_inputDF['N_tot'] == 1]
+    values = df_subset['variantID'].values.tolist()
+    print(values)
+    revolver_inputDF2 = revolver_inputDF2.query("variantID != @values")
+
+    print(len(revolver_inputDF2))
+    revolver_inputDF2.to_csv("revolver_input.tsv", sep='\t', index=False)
+
+
